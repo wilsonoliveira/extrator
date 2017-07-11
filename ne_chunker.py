@@ -9,6 +9,10 @@ from nltk.chunk import ChunkParserI
 from nltk import pos_tag, word_tokenize
 from nltk.chunk import conlltags2tree, tree2conlltags
 
+#matplotlib, pyplot
+import matplotlib.pyplot as plt
+import numpy as np
+
 ner_tags = collections.Counter()
 
 corpus_root = "../gmb-2.2.0"
@@ -171,16 +175,34 @@ test_samples = data[int(len(data) * 0.9):]
 
 #print "#training samples = %s" % len(training_samples)    # training samples = 55809
 #print "#test samples = %s" % len(test_samples)                  # test samples = 6201
+acuracia = []
+precisao = []
+recall = []
+f1 = []
+for samples in [1000, 2000, 3000, 4000]:
+    chunker = NamedEntityChunker(training_samples[:samples])
 
-chunker = NamedEntityChunker(training_samples[:2000])
+    chunker.parse(pos_tag(word_tokenize("I'm going to Germany this Monday.")))
 
-print chunker.parse(pos_tag(word_tokenize("I'm going to Germany this Monday.")))
+    score = chunker.evaluate([conlltags2tree([(w, t, iob) for (w, t), iob in iobs]) for iobs in test_samples[:500]])
+    acuracia.append(score.accuracy())
+    precisao.append(score.precision())
+    recall.append(score.recall())
+    f1.append(score.f_measure())
+# print ("acuracia: ",score.accuracy())
+# print ("precisao: ",score.precision())
+# print ("recall: ",score.recall())
+#metricas = [score.accuracy(), score.precision(), score.recall(), score.f_measure()]
+#f1 = (2* score.precision()*score.recall())/(score.precision()+score.recall())
+#print ("f1: ",f1)
 
-score = chunker.evaluate([conlltags2tree([(w, t, iob) for (w, t), iob in iobs]) for iobs in test_samples[:500]])
+fig = plt.figure()
+ax = fig.add_subplot(111)
 
-print "acuracia: ",score.accuracy()
-print "precisao: ",score.precision()
-print "recall: ",score.recall()
+# Plot the data
 
-f1 = (2* score.precision()*score.recall())/(score.precision()+score.recall())
-print "f1: ",f1
+ax.bar([1000, 2000, 3000, 4000],f1)
+ax.axvline(0.65)
+
+# Show the plot
+plt.show()
